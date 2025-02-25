@@ -12,16 +12,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @RestController
-@RequestMapping("/api/images")
+@RequestMapping("/api/v1/images")
 @RequiredArgsConstructor
 public class ImageController {
 
     private final GridFSImageStorageService imageService;
 
+    private static final String IMAGE_SERVICE_URL = "http://localhost:8081/api/v1/images/";
+
     @PostMapping("/upload")
     public ResponseEntity<String> uploadImage(@RequestParam("file") MultipartFile file) throws IOException {
         ObjectId id = imageService.storeImage(file.getOriginalFilename(), file.getInputStream());
-        return ResponseEntity.ok().body("Image uploaded successfully with ID: " + id.toString());
+        String imageUrl = IMAGE_SERVICE_URL + id.toString();
+        return ResponseEntity.ok().body(imageUrl);
     }
 
     @GetMapping

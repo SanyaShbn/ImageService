@@ -1,0 +1,35 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: mongo
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: example
+
+  zookeeper:
+    image: zookeeper:3.5
+    ports:
+      - "2181:2181"
+
+  kafka:
+    image: confluentinc/cp-kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+    depends_on:
+      - zookeeper
+
+#  image-service:
+#    build: .
+#    depends_on:
+#      - mongodb
+#      - kafka
+#    environment:
+#      SPRING_DATA_MONGODB_URI: mongodb://mongodb:27017/image_service_db
+#      KAFKA_BOOTSTRAP_SERVERS: kafka:9092
