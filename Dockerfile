@@ -1,5 +1,5 @@
-FROM openjdk:17-jre-slim
+FROM openjdk:17-jdk-slim
 
-COPY build/libs/image-service-0.0.1-SNAPSHOT.jar /app.jar
+COPY build/libs/ImageService-0.0.1-SNAPSHOT.jar /app.jar
 
 ENTRYPOINT ["java", "-jar", "/app.jar"]
