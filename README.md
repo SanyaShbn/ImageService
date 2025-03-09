@@ -54,3 +54,103 @@ docker-compose up
 ```
 https://github.com/SanyaShbn/TicketBookingSystem.git
 ```
+
+## Описание процесса деплоя в kubernetes (на данный момент, инструкция - только для Windows)
+
+### Предварительные требования
+
+Убедитесь, что установлены следующие инструменты:
+
+- [Minikube](https://minikube.sigs.k8s.io/docs/start/) (для локального Kubernetes-кластера)
+- [kubectl](https://kubernetes.io/docs/tasks/tools/) (для управления кластером)
+- Docker (с поддержкой локального демона Minikube)
+- В качестве виртуальной машины использовал Oracle VirtualBox(https://www.virtualbox.org/wiki/Downloads)
+
+### Шаг 1: Запуск Minikube
+
+Запустите Minikube, если он ещё не запущен (в PowerShell):
+
+```
+minikube start --no-vtx-check
+```
+
+Настройте Docker-клиент на использование Docker-демона Minikube:
+
+```
+minikube docker-env | Invoke-Expression
+```
+
+### Шаг 2: Построение Docker-образа
+
+Перейдите в корневую директорию проекта и выполните:
+
+```
+docker build -t imageservice-image-service:latest .
+```
+
+### Шаг 3: Деплой MongoDB
+
+Перейдите в директорию "kubernetes" в корне проекта, содержащую .yaml-файлы, необходимые для деплоя
+проекта в kubernetes.
+Примените файл persistent-volumes.yaml для настройки Persistent Volume в MongoDB:
+
+```
+kubectl apply -f persistent-volumes.yaml
+```
+
+Далее задеплойте MongoDB:
+
+```
+kubectl apply -f mongodb-deployment.yaml
+```
+
+### Шаг 4: Деплой Kafka
+
+Сначала применим файл zookeeper-deployment.yaml:
+
+```
+kubectl apply -f zookeeper-deployment.yaml
+```
+
+Далее деплоим непосредственно Kafka:
+
+```
+kubectl apply -f kafka-deployment.yaml
+```
+
+Рекомендуется периодически осуществлять проверку статуса подов, чтобы удостовериться, что все они запущены и корректно
+работают перед развертыванием ImageService:
+
+```
+kubectl get pods
+```
+
+### Шаг 5: Деплой ImageService
+
+Примените файл image-service-deployment.yaml:
+
+```
+kubectl apply -f image-service-deployment.yaml
+```
+
+Перенаправьте порт для локального доступа после его запуска:
+
+```
+kubectl port-forward svc/image-service 8081:8081
+```
+
+Теперь сервис доступен по адресу http://localhost:8081.
+
+### Шаг 6: Проверка взаимодействия
+
+ImageService использует MongoDB и Kafka. Можете проверить их статус:
+
+```
+kubectl get pods
+kubectl logs <имя-pod>
+```
+
+Дальнейшее полноценное тестирование сервиса рекомендуется производить вместе с основным, TicketBookingSystem:
+https://github.com/SanyaShbn/TicketBookingSystem/tree/learning-ci-cd-and-k8s.
+По данной ссылке доступна ветка с описанием деплоя в kubernetes уже основного сервиса (отдельно ImageService можно
+протестировать, используя, например, Postman. Swagger здесь подключен не был)
